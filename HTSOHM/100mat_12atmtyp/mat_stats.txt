@@ -1,0 +1,12 @@
+
+BOUNDARIES
+Number of particles: 100
+number density:   0.004302
+x-coordinate: 52.394
+y-coordinate: 52.394
+z-coordinate: 52.394
+Epsilon: 52.394
+Sigma: 52.394
+Charge: 52.394
+
+#name     number density     xdim     ydim     zdim     total particles     net charge

@@ -1,0 +1,17 @@
+material0
+
+loop_
+_symmetry_equiv_pos_as_xyz
+  x,y,z
+_cell_length_a          17.8234
+_cell_length_b          19.1722
+_cell_length_c          41.8208
+_cell_angle_alpha       90.0000
+_cell_angle_beta        90.0000
+_cell_angle_gamma       90.0000
+loop_
+_atom_site_label
+_atom_site_type_symbol
+_atom_site_fract_x
+_atom_site_fract_y
+_atom_site_fract_z

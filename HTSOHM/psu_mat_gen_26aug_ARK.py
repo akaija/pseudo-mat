@@ -1,10 +1,8 @@
-from random import choice, random, randrange, uniform
+from random import choice, random, randrange, randint
 from math import fsum
 import os
 import numpy as np
 from math import floor
-# import functools need in Python 3 or greater
-
 
 def GCD(a,b):
 	while b:
@@ -18,15 +16,15 @@ def LCMM(*args):
 	return reduce(LCM, args)
 	
 def generate(
-N, ATOM_TYPES, 
-ndenmax=0.004302, ndenmin=0.000013905, 
-xmax=52.3940, xmin=14.8193, 
-ymax=52.3940, ymin=14.8193, 
-zmax=52.3940, zmin=14.8193, 
-epmax=410.6115, epmin=2.0128, 
-sigmax=5.2394, sigmin=1.6834, 
-qmax=6.0,
-elem_charge=0.0001):
+	N, ATOM_TYPES, 
+	ndenmax=0.004302, ndenmin=0.000013905, 
+	xmax=52.3940, xmin=14.8193, 
+	ymax=52.3940, ymin=14.8193, 
+	zmax=52.3940, zmin=14.8193, 
+	epmax=410.6115, epmin=2.0128, 
+	sigmax=5.2394, sigmin=1.6834, 
+	qmax=6.0,
+	elem_charge=0.0001):
 
 #epmax DEFINED WRT TO X-Y-Z LIMITS?
 #max number density based on that of pure Iron
@@ -129,10 +127,12 @@ elem_charge=0.0001):
 		pseudo_atoms.write(pseudo_heading)
         
         #LJ parameters
-
+#####
+#####
 		ep = []
 		sig = []
 		q = []
+		
 		for i in range(ATOM_TYPES):
 			epsilon = round(random() * (epmax - epmin) + epmin, 4)
 			ep.append(epsilon)
@@ -145,72 +145,67 @@ elem_charge=0.0001):
 		sig_ = np.asarray(sig)
 		q_ = np.asarray(q)
 		ID_ = np.asarray(range(0,ATOM_TYPES))
-		
+
 		ep = ep_.reshape(-1,1)
 		sig = sig_.reshape(-1,1)
 		q = q_.reshape(-1,1)
 		ID = ID_.reshape(-1,1)
-		
-		atoms = np.hstack((ID, ep, sig, q))
-		
-		n_atoms = np.empty([0, 4])
-		for i in range(n_):
-			atomtype = choice(range(ATOM_TYPES))
-			n_atoms = np.vstack([n_atoms, atoms[atomtype, :]])
-    
-		IDs = n_atoms[:,0]
-		
-		count = []
-		for i in range(ATOM_TYPES):
-			if i in IDs:
-				count_i = list(IDs).count(i)
-				count.append(count_i)
-		
-		temp_LCM = LCMM(*count)
-		print = temp_LCM
-		
-		cm_max = floor(qmax / (temp_LCM * elem_charge / min(count)))
-		
-		cm_list = []
-		cm_f = -1 * sum(cm_list)
-		
-#		print atoms
-#		for i in range(ATOM_TYPES):
-#			cm_i = uniform(-1 * cm_max, cm_max)
-#			cm_list.append(cm_i)
-#			
-#atoms[i, 3] = cm_i * temp_LCM * elem_charge / count[i]
-#print atoms[i, 3]
-		
-#		pos = ATOM_TYPES - 1
-#		print atoms
-#		atoms[-1, 3] = cm_f * temp_LCM * elem_charge / count[ATOM_TYPES]
-		
-#        for i in range(ATOM_TYPES):
-#@            if i in IDs:
-#               charge = round(random() * (qmax - qmin) + qmin, 4)
-                # weight_i = list(IDs).count(i)
-                # k = choice(IDs)
-                # weight_k = list(IDs).count(k)
-                # for j in range(n_):
-                    # if n_atoms[j,0] == i:
-                        # n_atoms[j,3] = n_atoms[j,3] + charge * int(weight_k)
-			# atoms[i,3] = n_atoms[j,3] + charge * int(weight_k)
-                    # if n_atoms[j,0] == k:
-                        # n_atoms[j,3] = n_atoms[j,3] - charge * int(weight_i)
-                        # atoms[k,3] = n_atoms[j,3] - charge * int(weight_i)
 
-		mat_charge = str(sum(n_atoms[:,3]))
-		cif_file.write('#NET CHARGE: ' + mat_charge + '\n')
+		atoms = np.hstack((ID, ep, sig, q))
+
+		n_atoms = np.empty([0, 4])
+
+		for i in range(n_):
+			a_type = choice(range(ATOM_TYPES))
+			n_atoms = np.vstack([n_atoms, atoms[a_type, :]])
+
+		#a_count = np.empty([ATOM_TYPES, 1], dtype=int)
+		a_count = []
+		a_id = []
+		for i in range(ATOM_TYPES):
+			if i in n_atoms[:, 0]:
+				count = list(n_atoms[:, 0]).count(i)
+				if count != 0:
+					a_count.append(count)
+					a_id.append(i)
+
+		temp_LCM = LCMM(*a_count)
+
+		cm_max = floor(qmax / (temp_LCM * elem_charge / min(a_count)))    # maxiumum charge multiplier
+
+		cm_list = []                                                      
+		#cm_f = -1 * sum(cm_list)
+
+		#print atoms
+		ac_len = len(a_count)
+
+		#if ac_len == 1:
+		#    print 'this will be charge 0!!!!!!!!'
+		#
+		#else:
+		for i in range(ac_len - 1):  #randomly choose first n-1 charge multipliers
+			cm_i = randint(-1 * cm_max, cm_max)
+			cm_list.append(cm_i)
+
+			atoms[a_id[i], 3] = cm_i * temp_LCM * elem_charge / a_count[i]
+
+		cm_f = -1 * sum(cm_list)
+		atoms[a_id[-1], 3] = cm_f * temp_LCM * elem_charge / a_count[-1]
+
+		net_q = 0
+		for i in range(ac_len):
+			net_q = a_count[i] * atoms[a_id[i], 3] + net_q
+
+		mat_charge = str(round(net_q, 10))
+#		cif_file.write('#NET CHARGE: ' + mat_charge + '\n')
 		mat_X_stats = (mat_name + '     ' + str(nden_) + '     ' + str(xdim_) +
 					   '     ' + str(ydim_) + '     ' + str(zdim_) + '     ' + 
-					   str(n_) + '     ' + 
-					   mat_charge + '\n')
+					   str(n_) + '     ' + mat_charge + '\n')
 		mat_stats.write(mat_X_stats)
 		
 		eps = n_atoms[:,1]
 		sigs = n_atoms[:,2]
-		qs = n_atoms[:,3]
+#		qs = n_atoms[:,3]
 	
 		#writing mixing_rules, pseudo_atoms...
 		for i in range(ATOM_TYPES):
@@ -282,4 +277,3 @@ elem_charge=0.0001):
 		mixing_rules.close()
 		pseudo_atoms.close()
 		force_field.close()
-		
